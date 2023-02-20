@@ -15,16 +15,22 @@ class BuilderDefault:
         self.banca = self.etlRequest.semaforo.abi
         self.dbConf = DbConfMySql()
         self.dbSource = DbSourceMySql(self.dbConf.getSourceParameters(self.table))
+        self.query_ingestion = self.dbConf.getIngestionQuery(self.table)
+        self.additional_where = self.dbConf.getAdditionalWhere(self.table)
+        self.num_partitions = self.dbConf.getNumPartitions(self.table)
+        self.spark_parameters = self.dbConf.getSparkParameters(self.table)
+        self.ingestion_table = self.dbConf.getIngestionTable(self.table)
+        self.query_count = self.dbConf.getCountQuery(self.table).format(additional_where=self.additional_where)
 
     def ingest(self):
         try:
             logging.info(f"Start ingestion table {self.table}")
-            df_source = read_data_from_source(self.dbConf.getSparkParameters(self.table),
-                                              query_ingestion=self.dbConf.getIngestionQuery(self.table)
-                                              .format(additional_where=self.dbConf.getAdditionalWhere(self.table)),
-                                              elements_count=self.getCount(),
-                                              num_partitions=self.dbConf.getNumPartitions(self.table))
-            write_data_to_target(df_source=df_source, table=self.dbConf.getIngestionTable(self.table))
+            df_source = read_data_from_source(self.spark_parameters,
+                                              query_ingestion=self.query_ingestion
+                                              .format(additional_where=self.additional_where,
+                                                      elements_count=self.getCount(),
+                                                      num_partitions=self.num_partitions))
+            write_data_to_target(df_source=df_source, table=self.ingestion_table)
             logging.info(f"End ingestion table {self.table}")
             return EtlResponse(processId=self.etlRequest.processId, status="OK", error=None)
         except Exception as e:
@@ -33,4 +39,4 @@ class BuilderDefault:
             return EtlResponse(processId=self.etlRequest.processId, status="KO", error=e)
 
     def getCount(self):
-        pass
+        return self.dbSource.returnCount(self.query_count)
