@@ -9,7 +9,7 @@ from Utils.DbUtils.interfaces.IDbConf import IDbConf
 
 class DbConfMySql(IDbConf):
 
-    def __init__(self, table):
+    def __init__(self):
         self.config = configparser.ConfigParser()
         self.config.read('config.ini')
         self.db_config = mysql.connector.connect(
@@ -93,7 +93,7 @@ class DbConfMySql(IDbConf):
             if num_partitions is not None:
                 return int(num_partitions)
             else:
-                return 100
+                return 10
         except TimeoutError as te:
             logging.error(f"QueryExecutionException in getNumPartitions: {te}")
             raise te

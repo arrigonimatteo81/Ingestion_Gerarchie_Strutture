@@ -3,7 +3,7 @@
 class EtlResponse:
 
     def __init__(self, processId, status, error):
-        self.processId=processId
+        self.processId = processId
         self.status = status
         self.error = error
 

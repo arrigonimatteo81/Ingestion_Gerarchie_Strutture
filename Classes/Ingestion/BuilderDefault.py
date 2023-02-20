@@ -13,7 +13,6 @@ class BuilderDefault:
     def __init__(self, etl_request: EtlRequest):
         self.etlRequest = etl_request
         self.banca = self.etlRequest.semaforo.abi
-        self.provenienza = self.etlRequest.semaforo.provenienza
         self.dbConf = DbConfMySql()
         self.dbSource = DbSourceMySql(self.dbConf.getSourceParameters(self.table))
 
@@ -21,10 +20,11 @@ class BuilderDefault:
         try:
             logging.info(f"Start ingestion table {self.table}")
             df_source = read_data_from_source(self.dbConf.getSparkParameters(self.table),
-                                              query_ingestion=self.getQueryIngest(),
+                                              query_ingestion=self.dbConf.getIngestionQuery(self.table)
+                                              .format(additional_where=self.dbConf.getAdditionalWhere(self.table)),
                                               elements_count=self.getCount(),
-                                              num_partitions=self.getNumPartitions())
-            write_data_to_target(df_source=df_source, table=self.getDestinationTable())
+                                              num_partitions=self.dbConf.getNumPartitions(self.table))
+            write_data_to_target(df_source=df_source, table=self.dbConf.getIngestionTable(self.table))
             logging.info(f"End ingestion table {self.table}")
             return EtlResponse(processId=self.etlRequest.processId, status="OK", error=None)
         except Exception as e:
@@ -32,17 +32,5 @@ class BuilderDefault:
             logging.error(f"Error in ingest while ingesting {self.table}")
             return EtlResponse(processId=self.etlRequest.processId, status="KO", error=e)
 
-    def getDestinationTable(self):
-        return self.dbConf.getIngestionTable(self.table)
-
-    def getQueryIngest(self):
-        pass
-
     def getCount(self):
         pass
-
-    def getAdditionalWhere(self):
-        return self.dbConf.getAdditionalWhere(self.table)
-
-    def getNumPartitions(self):
-        return self.dbConf.getNumPartitions(self.table)
