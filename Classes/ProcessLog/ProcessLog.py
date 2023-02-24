@@ -1,6 +1,5 @@
 import mysql.connector
 import datetime
-import time
 
 from Classes.Etl import EtlRequest, EtlResponse
 
@@ -81,11 +80,27 @@ class ProcessLog:
                     banca) + "','silver','" + str(periodoRif) + "','','" + semaforoID + "')")
             self.configdb.commit()
 
-            # aggiungo update del registro per dire che abbiamo letto la riga id-esima
+            # verifico se nel registro e' presente la riga
+            # oppure devo fare una insert perche' magari hanno aggiunto una
+            # provenienza nuova o una banca nuova e non e'
+            # stata creata la riga del semaforo
             configcursor = self.configdb.cursor()
             configcursor.execute(
-                "update td_pg_db_registro_domini_sg set max_id_riga_semaforo ='" + semaforoID + "' where provenienza = '" + provenienza + "' AND banca = '" + banca + "' AND tipo_caricamento='" + tipoCaricamento + "'")
-            self.configdb.commit()
+                "select max_data_va, max_id_riga_semaforo td_pg_db_registro_domini_sg where provenienza = '" + provenienza + "' AND banca = '" + banca + "' AND tipo_caricamento='" + tipoCaricamento + "'")
+            dbResult = configcursor.fetchone()
+
+            if dbResult is None:
+                # faccio insert del registro per dire che abbiamo letto la riga id-esima
+                configcursor = self.configdb.cursor()
+                configcursor.execute(
+                    "insert into td_pg_db_registro_domini_sg (provenienza, tipo_caricamento, banca, max_data_va, max_id_riga_semaforo) values('" + provenienza + "', '" + tipoCaricamento + "', '" + banca + "', '', '" + semaforoID + "')")
+                self.configdb.commit()
+            else:
+                # aggiungo update del registro per dire che abbiamo letto la riga id-esima
+                configcursor = self.configdb.cursor()
+                configcursor.execute(
+                    "update td_pg_db_registro_domini_sg set max_id_riga_semaforo ='" + semaforoID + "' where provenienza = '" + provenienza + "' AND banca = '" + banca + "' AND tipo_caricamento='" + tipoCaricamento + "'")
+                self.configdb.commit()
         else:
 
             # vado a settare come ko nel log processo e ci metto anche la data di fine
