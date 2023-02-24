@@ -1,16 +1,19 @@
 import logging
+import sys
 
-from Classes.Etl import EtlRequest
-from Classes.Etl.EtlResponse import EtlResponse
 from Utils.DbUtils.DbConfPostgres import DbConfPostgres
 from Utils.DbUtils.DbSourceMySql import DbSourceMySql
 from Utils.spark_utils import read_data_from_source, write_data_to_target
 
+sys.path.insert(0, "..")
+
+from Classes.Etl.EtlRequestStrutture import EtlRequestStrutture
+from Classes.Etl.EtlResponse import EtlResponse
 
 class BuilderDefault:
     table = ""
 
-    def __init__(self, etl_request: EtlRequest):
+    def __init__(self, etl_request: EtlRequestStrutture):
         self.etlRequest = etl_request
         self.banca = self.etlRequest.semaforo.abi
         self.dbConf = DbConfPostgres()

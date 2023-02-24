@@ -1,8 +1,11 @@
-import mysql.connector
 import datetime
-import time
+import sys
 
-from Classes.Etl import EtlRequest, EtlResponse
+import mysql.connector
+
+sys.path.insert(0, "..")
+from Classes.Etl.EtlRequestStrutture import EtlRequestStrutture
+from Classes.Etl.EtlResponse import EtlResponse
 
 class ProcessLog:
     db_param = {"jar_path": "/Layer_gestionale/config/jar/mysql-connector-j-8.0.32.jar", \
@@ -18,7 +21,7 @@ class ProcessLog:
             user=self.db_param["db_user"], \
             password=self.db_param["db_password"], \
             database="lab")
-    def startProcessLog(self, request: EtlRequest):
+    def startProcessLog(self, request: EtlRequestStrutture):
         process_id = request.processId
         semaforoID = request.semaforo.id
         banca = request.semaforo.abi
@@ -46,7 +49,7 @@ class ProcessLog:
                 "%Y/%m/%d %H:%M:%S") + "','" + str(semaforoID) + "')")
         self.configdb.commit()
 
-    def endProcessLog(self, request: EtlRequest, response: EtlResponse):
+    def endProcessLog(self, request: EtlRequestStrutture, response: EtlResponse):
         process_id = response.processId
         semaforoID = request.semaforo.id
         banca = request.semaforo.abi
