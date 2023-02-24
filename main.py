@@ -7,10 +7,11 @@ from Classes.Etl.EtlRequest import EtlRequest
 from Classes.Etl.Semaforo import Semaforo
 from Classes.Ingestion.BuilderDefault import BuilderDefault
 from Classes.Ingestion.BuilderRedent import BuilderRedent
+from Classes.Ingestion.BuilderRedpvi import BuilderRedpvi
 from Classes.Ingestion.BuilderRedstr import BuilderRedstr
 from Classes.Ingestion.BuilderRedven import BuilderRedven
 from Classes.ProcessLog.ProcessLog import ProcessLog
-from Utils.constants import TAB_REDENT, TAB_REDVEN, TAB_REDSTR
+from Utils.constants import TAB_REDENT, TAB_REDVEN, TAB_REDSTR, TAB_REDPVI
 from Utils.utils import configure_log, parse_arguments
 
 
@@ -21,6 +22,8 @@ def switch_classes(request: EtlRequest) -> BuilderDefault:
         return BuilderRedven(request)
     if request.semaforo.tabella == TAB_REDSTR:
         return BuilderRedstr(request)
+    if request.semaforo.tabella == TAB_REDPVI:
+        return BuilderRedpvi(request)
 
 
 def getEtlRequestBasedOnArguments(args) -> EtlRequest:

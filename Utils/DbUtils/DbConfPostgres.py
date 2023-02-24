@@ -2,17 +2,17 @@ import configparser
 import json
 import logging
 
-import mysql.connector
+import psycopg2
 
 from Utils.DbUtils.interfaces.IDbConf import IDbConf
 
 
-class DbConfMySql(IDbConf):
+class DbConfPostgres(IDbConf):
 
     def __init__(self):
         self.config = configparser.ConfigParser()
         self.config.read('config.ini')
-        self.db_config = mysql.connector.connect(
+        self.db_config = psycopg2.connect(
             host=self.config['CONFIG']['db_host'],
             user=self.config['CONFIG']['db_user'],
             password=self.config['CONFIG']['db_password'],
@@ -33,38 +33,40 @@ class DbConfMySql(IDbConf):
 
     def getCountQuery(self, table):
         try:
-            query_count_cursor = self.db_config.cursor()
-            query_count_cursor.execute(f"SELECT Sql_String_Count from config_tables where Original_Table='{table}' and Inquiry_Type='DOMINIO'")
-            return query_count_cursor.fetchone()[0]
+            curs = self.db_config.cursor()
+            curs.execute(f"SELECT Sql_String_Count from config_tables where Original_Table='{table}' and Inquiry_Type"
+                         f"='DOMINIO'")
+            return curs.fetchone()[0]
         except TimeoutError as te:
             logging.error(f"QueryExecutionException in getCountQuery: {te}")
             raise te
 
     def getIngestionQuery(self, table):
         try:
-            query_ingestion_cursor = self.db_config.cursor()
-            query_ingestion_cursor.execute(f"SELECT Sql_String_Ingestion from config_tables where Original_Table='{table}' and Inquiry_Type='DOMINIO'")
-            return query_ingestion_cursor.fetchone()[0]
+            curs = self.db_config.cursor()
+            curs.execute(f"SELECT Sql_String_Ingestion from config_tables where Original_Table='{table}' and "
+                         f"Inquiry_Type='DOMINIO'")
+            return curs.fetchone()[0]
         except TimeoutError as te:
             logging.error(f"QueryExecutionException in getIngestionQuery: {te}")
             raise te
 
     def getIngestionTable(self, table):
         try:
-            query_cursor = self.db_config.cursor()
-            query_cursor.execute(
+            curs = self.db_config.cursor()
+            curs.execute(
                 f"SELECT Output_Table from config_tables where Original_Table='{table}' and Inquiry_Type='DOMINIO'")
-            return query_cursor.fetchone()[0]
+            return curs.fetchone()[0]
         except TimeoutError as te:
             logging.error(f"QueryExecutionException in getIngestionTable: {te}")
             raise te
 
     def getSparkParameters(self, table):
         try:
-            query_cursor = self.db_config.cursor()
-            query_cursor.execute(f"select Spark_Params from config_tables where Original_Table='{table}' and "
-                                 f"Inquiry_Type='DOMINIO'")
-            spark_confs = query_cursor.fetchone()[0]
+            curs = self.db_config.cursor()
+            curs.execute(f"select Spark_Params from config_tables where Original_Table='{table}' and Inquiry_Type"
+                         f"='DOMINIO'")
+            spark_confs = curs.fetchone()[0]
             spark_params = json.loads(spark_confs)
             return spark_params
         except TimeoutError as te:
@@ -73,10 +75,10 @@ class DbConfMySql(IDbConf):
 
     def getAdditionalWhere(self, table):
         try:
-            query_cursor = self.db_config.cursor()
-            query_cursor.execute(
+            curs = self.db_config.cursor()
+            curs.execute(
                 f"SELECT Additional_Where from config_tables where Original_Table='{table}' and Inquiry_Type='DOMINIO'")
-            add_where = query_cursor.fetchone()[0]
+            add_where = curs.fetchone()[0]
             if add_where is not None:
                 return f"and {add_where}"
             else:
@@ -87,10 +89,10 @@ class DbConfMySql(IDbConf):
 
     def getNumPartitions(self, table):
         try:
-            query_cursor = self.db_config.cursor()
-            query_cursor.execute(
+            curs = self.db_config.cursor()
+            curs.execute(
                 f"SELECT Num_Partitions from config_tables where Original_Table='{table}' and Inquiry_Type='DOMINIO'")
-            num_partitions = query_cursor.fetchone()[0]
+            num_partitions = curs.fetchone()[0]
             if num_partitions is not None:
                 return int(num_partitions)
             else:
@@ -101,10 +103,10 @@ class DbConfMySql(IDbConf):
 
     def getSourceParameters(self, table):
         try:
-            query_cursor = self.db_config.cursor()
-            query_cursor.execute(f"select Db_Source_Params from config_tables where Original_Table='{table}' and "
-                                 f"Inquiry_Type='DOMINIO'")
-            db_source_confs = query_cursor.fetchone()[0]
+            curs = self.db_config.cursor()
+            curs.execute(f"select Db_Source_Params from config_tables where Original_Table='{table}' and Inquiry_Type"
+                         f"='DOMINIO'")
+            db_source_confs = curs.fetchone()[0]
             db_source_params = json.loads(db_source_confs)
             return db_source_params
         except TimeoutError as te:

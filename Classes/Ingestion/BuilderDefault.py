@@ -1,10 +1,10 @@
 import logging
 
+from Classes.Etl import EtlRequest
 from Classes.Etl.EtlResponse import EtlResponse
-from Utils.DbUtils.DbConfMySql import DbConfMySql
+from Utils.DbUtils.DbConfPostgres import DbConfPostgres
 from Utils.DbUtils.DbSourceMySql import DbSourceMySql
 from Utils.spark_utils import read_data_from_source, write_data_to_target
-from Classes.Etl import EtlRequest
 
 
 class BuilderDefault:
@@ -13,7 +13,7 @@ class BuilderDefault:
     def __init__(self, etl_request: EtlRequest):
         self.etlRequest = etl_request
         self.banca = self.etlRequest.semaforo.abi
-        self.dbConf = DbConfMySql()
+        self.dbConf = DbConfPostgres()
         self.dbSource = DbSourceMySql(self.dbConf.getSourceParameters(self.table))
         self.query_ingestion = self.dbConf.getIngestionQuery(self.table)
         self.additional_where = self.dbConf.getAdditionalWhere(self.table)
@@ -25,11 +25,11 @@ class BuilderDefault:
     def ingest(self):
         try:
             logging.info(f"Start ingestion table {self.table}")
-            df_source = read_data_from_source(self.spark_parameters,
+            df_source = read_data_from_source(source=self.spark_parameters,
                                               query_ingestion=self.query_ingestion
-                                              .format(additional_where=self.additional_where,
-                                                      elements_count=self.getCount(),
-                                                      num_partitions=self.num_partitions))
+                                              .format(additional_where=self.additional_where),
+                                              elements_count=self.getCount(),
+                                              num_partitions=self.num_partitions)
             write_data_to_target(df_source=df_source, table=self.ingestion_table)
             logging.info(f"End ingestion table {self.table}")
             return EtlResponse(processId=self.etlRequest.processId, status="OK", error=None)

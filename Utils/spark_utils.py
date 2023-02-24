@@ -2,7 +2,7 @@ import logging
 
 from pyspark.sql import SparkSession
 from pyspark.sql.utils import QueryExecutionException, AnalysisException, PythonException
-from Utils.constants import BANCA
+from Utils.constants import ROW_N
 
 spark_session = SparkSession.builder.config("spark.jars",
                                             "/home/testspark/Layer_gestionale/config/jar/mysql-connector-j-8.0.32.jar").getOrCreate()
@@ -20,7 +20,7 @@ def read_data_from_source(source, query_ingestion, elements_count, num_partition
             .option("dbtable", query_ingestion) \
             .option("user", source['db_user']) \
             .option("password", source['db_password']) \
-            .option("partitionColumn", BANCA) \
+            .option("partitionColumn", ROW_N) \
             .option("upperBound", str(elements_count)) \
             .option("lowerBound", "1") \
             .option("numPartitions", str(num_partitions)) \
@@ -44,6 +44,7 @@ def read_data_from_source(source, query_ingestion, elements_count, num_partition
 def write_data_to_target(df_source, table):
     try:
         df_source \
+            .drop(ROW_N) \
             .write \
             .format("jdbc") \
             .option("driver", "com.mysql.cj.jdbc.Driver") \
