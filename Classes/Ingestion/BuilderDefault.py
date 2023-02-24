@@ -5,7 +5,7 @@ from Utils.DbUtils.DbConfPostgres import DbConfPostgres
 from Utils.DbUtils.DbSourceMySql import DbSourceMySql
 from Utils.spark_utils import read_data_from_source, write_data_to_target
 
-sys.path.insert(0, "..")
+sys.path.insert(0, "..") #per importare il progetto "Classes" che contiene le classi di Etl, semaforo
 
 from Classes.Etl.EtlRequestStrutture import EtlRequestStrutture
 from Classes.Etl.EtlResponse import EtlResponse

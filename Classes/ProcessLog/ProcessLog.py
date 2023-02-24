@@ -27,7 +27,7 @@ class ProcessLog:
         semaforoID = request.semaforo.id
         banca = request.semaforo.abi
         periodoRif = ""
-        tabella = ""
+        tabella = request.tabella
         tipoCaricamento = ""
         provenienza = ""
         idFile = ""
@@ -37,30 +37,24 @@ class ProcessLog:
         # scrivo tabella td_pg_db_log_processi_domini_sg
         configcursor = self.configdb.cursor()
         configcursor.execute(
-            "insert into td_pg_db_log_processi_domini_sg (ID_PROCESSO, provenienza, tipo_caricamento, banca, step, num_periodo_rif, des_status, tms_data_ora_inizio, ID_SEMAFORO) values ('" + process_id + "','" + provenienza + "','" + tipoCaricamento + "', '" + str(
-                banca) + "','stage','" + str(periodoRif) + "','RUNNING','" + datetime.datetime.now().strftime(
-                "%Y/%m/%d %H:%M:%S") + "','" + str(semaforoID) + "')")
+            "insert into td_pg_db_log_processi_domini_sg (ID_PROCESSO,banca, step,  des_status, tms_data_ora_inizio, "
+            f"ID_SEMAFORO) values ('{process_id}','{banca}','stage','RUNNING','" +
+            datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S") + "','{semaforoID}')")
         self.configdb.commit()
 
         # scrivo tabella td_pg_db_log_sottoprocessi
         configcursor = self.configdb.cursor()
         configcursor.execute(
-            "insert into td_pg_db_log_sottoprocessi_domini_sg (ID_PROCESSO, provenienza, tipo_caricamento, banca, step, tabella, des_status, tms_data_ora_inizio, ID_SEMAFORO) values ('" + process_id + "','" + provenienza + "','" + tipoCaricamento + "', '" + str(
-                banca) + "','stage','" + str(tabella) + "','RUNNING','" + datetime.datetime.now().strftime(
-                "%Y/%m/%d %H:%M:%S") + "','" + str(semaforoID) + "')")
+            "insert into td_pg_db_log_sottoprocessi_domini_sg (ID_PROCESSO, banca, step, tabella, des_status, "
+            f"tms_data_ora_inizio, ID_SEMAFORO) values ('{process_id}',{banca}','stage','{tabella}','RUNNING','" +
+            datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S") + "','{semaforoID}')")
         self.configdb.commit()
 
     def endProcessLog(self, request: EtlRequestStrutture, response: EtlResponse):
         process_id = response.processId
         semaforoID = request.semaforo.id
         banca = request.semaforo.abi
-        periodoRif = ""
-        tabella = ""
-        tipoCaricamento = ""
-        provenienza = ""
-        idFile = ""
-        colonnaValore = ""
-        oCarico = request.semaforo.oCarico
+        tabella = request.tabella
 
         error = response.error
 
@@ -68,39 +62,44 @@ class ProcessLog:
             # vado a settare come ok nel log processo e ci metto anche la data di fine
             configcursor = self.configdb.cursor()
             configcursor.execute(
-                "update td_pg_db_log_processi_domini_sg set des_status='OK', tms_data_ora_fine='" + datetime.datetime.now().strftime(
-                    "%Y/%m/%d %H:%M:%S") + "' where ID_PROCESSO ='" + process_id + "' and step='stage'")
+                "update td_pg_db_log_processi_domini_sg set des_status='OK', tms_data_ora_fine='" +
+                datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S") + f"' where ID_PROCESSO ='{process_id}' and "
+                                                                        "step='stage'")
             self.configdb.commit()
 
             configcursor = self.configdb.cursor()
             configcursor.execute(
-                "update td_pg_db_log_sottoprocessi_domini_sg set des_status='OK', tms_data_ora_fine='" + datetime.datetime.now().strftime(
-                    "%Y/%m/%d %H:%M:%S") + "' where ID_PROCESSO ='" + process_id + "' and step='stage'")
+                "update td_pg_db_log_sottoprocessi_domini_sg set des_status='OK', tms_data_ora_fine='" +
+                datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S") + f"' where ID_PROCESSO ='{process_id}' and "
+                                                                        "step='stage'")
             self.configdb.commit()
 
             # genero nuovo record sul log dei processi per far partire il flusso che sposta in dati in silver
             configcursor = self.configdb.cursor()
             configcursor.execute(
-                "insert into td_pg_db_log_processi_domini_sg (ID_PROCESSO, provenienza, tipo_caricamento, banca, step, num_periodo_rif, des_status, ID_SEMAFORO) values ('" + process_id + "','" + provenienza + "','" + tipoCaricamento + "', '" + str(
-                    banca) + "','silver','" + str(periodoRif) + "','','" + semaforoID + "')")
+                "insert into td_pg_db_log_processi_domini_sg (ID_PROCESSO, banca, "
+                f"step, ID_SEMAFORO) values ('{process_id}', '{banca}','silver','{semaforoID}')")
             self.configdb.commit()
 
             # aggiungo update del registro per dire che abbiamo letto la riga id-esima
             configcursor = self.configdb.cursor()
             configcursor.execute(
-                "update td_pg_db_registro_domini_sg set max_id_riga_semaforo ='" + semaforoID + "' where provenienza = '" + provenienza + "' AND banca = '" + banca + "' AND tipo_caricamento='" + tipoCaricamento + "'")
+                f"update td_pg_db_registro_domini_sg set max_id_riga_semaforo ='{semaforoID}' where banca = '{banca}' "
+                f"AND tabella ='{tabella}'")
             self.configdb.commit()
         else:
 
             # vado a settare come ko nel log processo e ci metto anche la data di fine
             configcursor = self.configdb.cursor()
             configcursor.execute(
-                "update td_pg_db_log_processi_domini_sg set des_status='KO', tms_data_ora_fine='" + datetime.datetime.now().strftime(
-                    "%Y/%m/%d %H:%M:%S") + "', Note = '" +error+"' where ID_PROCESSO ='" + process_id + "' and step='stage'")
+                "update td_pg_db_log_processi_domini_sg set des_status='KO', tms_data_ora_fine='" +
+                datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S") + f"', Note = '{error}' where "
+                                                                        f"ID_PROCESSO ='{process_id}' and step='stage'")
             self.configdb.commit()
 
             configcursor = self.configdb.cursor()
             configcursor.execute(
-                "update td_pg_db_log_sottoprocessi_domini_sg set des_status='KO', tms_data_ora_fine='" + datetime.datetime.now().strftime(
-                    "%Y/%m/%d %H:%M:%S") + "', Note = '" +error+"' where ID_PROCESSO ='" + process_id + "' and step='stage'")
+                "update td_pg_db_log_sottoprocessi_domini_sg set des_status='KO', tms_data_ora_fine='" +
+                datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S") + f"', Note = '{error}' where "
+                                                                        f"ID_PROCESSO ='{process_id}' and step='stage'")
             self.configdb.commit()
