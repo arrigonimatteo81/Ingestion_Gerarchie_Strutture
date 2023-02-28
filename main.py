@@ -1,9 +1,8 @@
 import json
 import sys
+from os import path
 from types import SimpleNamespace
 
-# from Classes.Etl.EtlRequest import EtlRequest
-# from Classes.Etl.Semaforo import Semaforo
 from Classes.Ingestion.BuilderDefault import BuilderDefault
 from Classes.Ingestion.BuilderRedent import BuilderRedent
 from Classes.Ingestion.BuilderRedpvi import BuilderRedpvi
@@ -13,10 +12,9 @@ from Classes.ProcessLog.ProcessLog import ProcessLog
 from Utils.constants import TAB_REDENT, TAB_REDVEN, TAB_REDSTR, TAB_REDPVI
 from Utils.utils import configure_log
 
-sys.path.insert(0, "..")
+sys.path.append(path.abspath("../Classes"))
+from Classes.Etl.EtlRequestStrutture import EtlRequestStrutture
 
-from ETL.SemaforoStrutture import SemaforoStrutture
-from ETL.EtlRequest.EtlRequestStrutture import EtlRequestStrutture
 
 def switch_classes(request: EtlRequestStrutture) -> BuilderDefault:
     if request.semaforo.tabella == TAB_REDENT:
@@ -29,10 +27,10 @@ def switch_classes(request: EtlRequestStrutture) -> BuilderDefault:
         return BuilderRedpvi(request)
 
 
-def getEtlRequestBasedOnArguments(args) -> EtlRequestStrutture:
-    return EtlRequestStrutture(args.p, SemaforoStrutture(args.s.split("|")[0], args.s.split("|")[1],
-                                       args.s.split("|")[2])
-                      )
+#def getEtlRequestBasedOnArguments(args) -> EtlRequestStrutture:
+#    return EtlRequestStrutture(args.p, SemaforoStrutture(args.s.split("|")[0], args.s.split("|")[1],
+#                                       args.s.split("|")[2])
+#                      )
 
 
 if __name__ == '__main__':

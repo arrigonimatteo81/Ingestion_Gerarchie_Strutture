@@ -1,12 +1,12 @@
 import logging
 import sys
+from os import path
 
 from Utils.DbUtils.DbConfPostgres import DbConfPostgres
 from Utils.DbUtils.DbSourceMySql import DbSourceMySql
 from Utils.spark_utils import read_data_from_source, write_data_to_target
 
-sys.path.insert(0, "..") #per importare il progetto "Classes" che contiene le classi di Etl, semaforo
-
+sys.path.append(path.abspath("../Classes")) #per importare il progetto "Classes" che contiene le classi di Etl, semaforo
 from Classes.Etl.EtlRequestStrutture import EtlRequestStrutture
 from Classes.Etl.EtlResponse import EtlResponse
 
@@ -25,7 +25,7 @@ class BuilderDefault:
         self.ingestion_table = self.dbConf.getIngestionTable(self.table)
         self.query_count = self.dbConf.getCountQuery(self.table).format(additional_where=self.additional_where)
 
-    def ingest(self):
+    def ingest(self) -> EtlResponse:
         try:
             logging.info(f"Start ingestion table {self.table}")
             df_source = read_data_from_source(source=self.spark_parameters,
