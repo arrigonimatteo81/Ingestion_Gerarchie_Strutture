@@ -55,5 +55,6 @@ if __name__ == '__main__':
             registro = RegistroStrutture
             registro.upsertRegistro(banca=req.semaforo.abi, tabella=req.semaforo.tabella,
                                     semaforo_id=req.semaforo.id)
+            subprocessLog.InitSubrocessSilver(req, etlResponse)
         else:
             subprocessLog.CloseSubprocessLogKO(etlResponse)
